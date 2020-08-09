@@ -5,7 +5,7 @@ import os
 import numpy as np
 import pickle 
 import matplotlib.pyplot as plt
-
+import tensorflow as tf
 from tensorflow.keras.applications import vgg16
 from tensorflow.keras.models import Model
 import tensorflow.keras
@@ -177,11 +177,12 @@ def Model_Train(DIR_NAME,categories):
     print(history)
     model_name = "model.h5"
     model_path = DIR_NAME + "\\" + model_name
-    model.save(model_path)
+    model.save(model_path, include_optimizer=False)
 
     temp = history.history
 
     retJson = {"status":301,"msg":"Model trained successfully","history": str(temp)}
+    tf.keras.backend.clear_session()
     return retJson
 
 def Delete_Data(proj_path,categories):

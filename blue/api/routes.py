@@ -66,26 +66,26 @@ class Create_Project(Resource):
                         os.mkdir(path02)
                         print("created categories : ", first_category,second_category)
                 
-                        ret={"status":200,"msg":"Successfully created project"}         
+                        ret={"status":200,"message":"Successfully created project"}         
                         return jsonify(ret)
 
                 else:
                     print(proj_name, " folder already exists.")
-                    ret={"status":401,"msg":"category with this name already exist"}         
+                    ret={"status":401,"message":"category with this name already exist"}         
                     
                     return jsonify(ret)
         
-                ret={"status":200,"msg":"Successfully created project"}         
+                ret={"status":200,"message":"Successfully created project"}         
                 return jsonify(ret)
 
             else:
                 print(proj_name, " folder already exists.")
-                ret={"status":401,"msg":"Project with this name already exist"}         
+                ret={"status":401,"message":"Project with this name already exist"}         
                 
                 return jsonify(ret)
   
         except Exception as e:
-            ret={"status":401,"msg":"Cannot create this project","Problem":e}         
+            ret={"status":401,"message":"Cannot create this project","Problem":e}         
             return jsonify(ret)
 
 
@@ -109,18 +109,18 @@ class Uploading_Data(Resource):
 
                     for url in urls:
                         retJson = Upload_Data(cat_path,url)
-                    return jsonify({"status":200,"msg":retJson})
+                    return jsonify({"status":200,"message":retJson})
 
                 else:
-                    retJson = {"status":404,"msg":"Category with this name doesn't exist"}
+                    retJson = {"status":404,"message":"Category with this name doesn't exist"}
                     return jsonify(retJson)
 
             else:
-                retJson = {"status":404,"msg":"Project with this name doesn't exist"}
+                retJson = {"status":404,"message":"Project with this name doesn't exist"}
                 return jsonify(retJson)
 
         except Exception as e:
-            ret={"status":401,"msg":"Cannot Upload","Problem":e}         
+            ret={"status":401,"message":"Cannot Upload","Problem":e}         
             return jsonify(ret)
         
 
@@ -148,7 +148,7 @@ class Train_Models(Resource):
             return jsonify(retJson)
     
         except Exception as e:
-            ret={"status":401,"msg":"Error in training model","Problem":e}         
+            ret={"status":401,"message":"Error in training model","Problem":e}         
             return jsonify(ret)
 
 
@@ -178,7 +178,7 @@ class Prediction(Resource):
             return jsonify(retJson)
         
         except Exception as e:
-            ret={"status":401,"msg":"Cannot use this image for prediction","Problem":e}         
+            ret={"status":401,"message":"Cannot use this image for prediction","Problem":e}         
             return jsonify(ret)
 
 
@@ -189,6 +189,7 @@ class Get_Projects(Resource):
             
             complete_list = dict()
             proj_list = list()
+            projects = list()
             
             subfolders_projects = [ f.path for f in os.scandir(proj_path) if f.is_dir() ]
           
@@ -210,15 +211,20 @@ class Get_Projects(Resource):
                     cat_list.append(cat_last_name)
                     
                 
-                complete_list[last_name] = cat_list
+                #complete_list[last_name] = cat_list
+                complete_list["last_name"] = last_name
+                complete_list["categories"] = cat_list
+                projects.append([complete_list])
 
+                
 
-            retJson = {"status":200,"projects":proj_list,"categories":complete_list}
+            #retJson = {"status":200,"projects":projects,"categories":complete_list}
             
+            retJson = {"status":200,"projects":projects}
             return jsonify(retJson)
 
         except Exception as e:
-            ret={"status":401,"msg":"Cannot find projects","Problem":e}         
+            ret={"status":401,"message":"Cannot find projects","Problem":e}         
             return jsonify(ret)
 
 class Get_Projects_Without_Data(Resource):
@@ -227,11 +233,14 @@ class Get_Projects_Without_Data(Resource):
             proj_path = dirname + "\\Projects"
 
             complete_list = dict()
+            projectss = list()
+            proj_categories = list()
+            my_dict = dict()
       
             subfolders_projects = [ f.path for f in os.scandir(proj_path) if f.is_dir() ]
        
          
-            cat_count = 0
+            #cat_count = 0
             for proj in subfolders_projects:
   
                 cat_list = list()
@@ -252,27 +261,44 @@ class Get_Projects_Without_Data(Resource):
                     print(filelist)
 
                     if len(filelist) <= 0:
-                        cat_count += 1
 
-                        if cat_count > 1:
-                            complete_list[last_name] = cat_list
-                            print("1st",complete_list)
+                        dict1 = dict()
+                        dict1["name"] = cat_last_name
+                        dict1["status"] = "not-trained"
+                     
+                        #cat_count += 1
+
+                        # if cat_count > 1:
+                        #     complete_list[last_name] = cat_list
+                        #     print("1st",complete_list)
                             
-                        elif cat_count == 1 :
-                            print("here")
-                            print(cat_last_name)
-                            print(complete_list)
-                            complete_list[last_name] = cat_last_name
-                            print("2nd",complete_list)
+                        # elif cat_count == 1 :
+                        #     print("here")
+                        #     print(cat_last_name)
+                        #     print(complete_list)
+                        #     complete_list[last_name] = cat_last_name
+                        #     print("2nd",complete_list)
+                    elif len(filelist) > 0:
 
-                   
+                        dict1 = dict()
+                        dict1["name"] = cat_last_name
+                        dict1["status"] = "trained"
 
-            print("3rd",complete_list)
-            retJson = {"status":200,"missing_data_projects":complete_list,"NumberOfMissingCategories":cat_count}
+                    proj_categories.append(dict1)
+                    print(proj_categories)
+
+                temp_dict = {"project_name":last_name,"categories":proj_categories}
+                projectss.append(temp_dict)
+                #[{project_name:"example project 1", categories:[{name:"cat",status:"trained"},{name:"dog",status:"trained"}]}
+                        
+
+            #print("3rd",complete_list)
+            #retJson = {"status":200,"missing_data_projects":complete_list,"NumberOfMissingCategories":cat_count}
             
+            retJson = {"status":200,"missing_data_projects":projectss}
             return jsonify(retJson)
         except Exception as e:
-            ret={"status":401,"msg":"Cannot find projects","Problem":e}         
+            ret={"status":401,"message":"Cannot find projects","Problem":e}         
             return jsonify(ret)
 
 
@@ -305,13 +331,18 @@ class Sign_Up(Resource):
     def post(self):
 
         postedDate=request.get_json()
-        name = postedDate['user_name']
+        name = postedDate['fullname']
         password = postedDate['password']
         email=postedDate["user_email"]
         #yhn pe chala ky dekh lyna same pe dera hai ture ya false pe
 
+        if name == "martin":
+            isAdmin = True
+        else:
+            isAdmin = False
+
         if UserExist(name,email):
-            retJson = {"status" : 301, "msg": "already register"}
+            retJson = {"status" : 301, "message": "already register","fullname":name,"isAdmin":isAdmin}
 
         
 
@@ -321,7 +352,7 @@ class Sign_Up(Resource):
             user1 = Users(user_name= name,password = hashed_pw,user_email=email)
             db.session.add(user1)
             db.session.commit()
-            retJson = {"status":200,"msg":"singup successfully"}
+            retJson = {"status":200,"message":"singup successfully","fullname":name,"isAdmin":isAdmin}
         return jsonify(retJson)
 
 def verify_user(email,password):
@@ -353,16 +384,40 @@ class Login(Resource):
         password = postedDate['password']
         result,name=verify_user(email,password)
 
+        if name == "martin":
+            isAdmin = True
+        else:
+            isAdmin = False
+
         if  result== False:
-            retJson = {"status" : 301, "msg": "Invalid Username or Password"}
+            retJson = {"status" : 301, "message": "Invalid Username or Password","fullname":name,"isAdmin":isAdmin}
             return jsonify(retJson)
 
         else:
-            retJson = {"status":200,"msg":"You've successfully signed up to the Api","User Name":name}
+            retJson = {"status":200,"message":"You've successfully login up to the Api","fullname":name,"isAdmin":isAdmin}
             return jsonify(retJson)
 
 
 
+class Delete_Project(Resource):
+    def post(self):
+        try:
+            proj_path = dirname + "\\Projects"
+
+            postedDate=request.get_json()
+
+            project_name = postedDate['project_name']
+
+            project_path = proj_path + "\\" + project_name
+            os.remove(project_path)
+
+            retJson = {"status":200,"message":f"You've successfully deleted {project_name}"}
+            return jsonify(retJson)
+
+
+        except Exception as e:
+            retJson = {"status" : 301, "message": "Cannot delete this project"}
+            return jsonify(retJson)
 
 api.add_resource(Create_Project, "/create_project")
 api.add_resource(Uploading_Data, "/upload_data")
@@ -372,3 +427,4 @@ api.add_resource(Get_Projects, "/get_Projects")
 api.add_resource(Get_Projects_Without_Data, "/get_empty_Projects")
 api.add_resource(Sign_Up, '/sign_up')  
 api.add_resource(Login, '/login')
+api.add_resource(Delete_Project, '/delete_project')

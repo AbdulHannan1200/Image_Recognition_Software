@@ -1,4 +1,5 @@
 from tensorflow.keras.models import load_model
+import tensorflow as tf
 import requests
 from PIL import Image
 import urllib
@@ -21,7 +22,7 @@ def Prediction_Func(url,categories,model):
     new_array=cv2.resize(imgarr,(IMG_SIZE,IMG_SIZE))
     
     image = np.expand_dims(new_array, axis=0)
-    prediction = model.predict([image])
+    prediction = model.predict_on_batch([image])
     pred = prediction[0][0]
 
     if pred < 0.30:
@@ -31,5 +32,6 @@ def Prediction_Func(url,categories,model):
 
     prediction_result = cat_dict[result]
     retJson = {"status":200,"Predicted Category":str(prediction_result)}
+    tf.keras.backend.clear_session()
     
     return retJson
