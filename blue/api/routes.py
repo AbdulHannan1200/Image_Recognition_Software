@@ -13,6 +13,7 @@ import urllib
 import numpy as np
 from flask_sqlalchemy import SQLAlchemy
 import bcrypt
+import shutil
 
 dirname = os.path.dirname(os.path.abspath(__file__))
 dirname_list = dirname.split("\\")[:-1]
@@ -187,39 +188,62 @@ class Get_Projects(Resource):
         try:
             proj_path = dirname + "\\Projects"
             
-            complete_list = dict()
+            
             proj_list = list()
             projects = list()
-            
+            proj_categories = list()
+            projectss = list()
+
             subfolders_projects = [ f.path for f in os.scandir(proj_path) if f.is_dir() ]
-          
+            dict1 = dict()
             for proj in subfolders_projects:
+                complete_list = dict()
                 cat_list = list()
                 last_name = proj.split("\\")
                 last_name = last_name[-1]
        
                 proj_list.append(last_name)
 
+                extensions = [".h5"]
+                filelist = [ f for f in os.listdir(proj) if os.path.splitext(f)[1] in extensions]
 
-                projects_categories = [ f.path for f in os.scandir(proj) if f.is_dir() ]
-                for cate in projects_categories:
-                    print(cate)
-                    cat_last_name = cate.split("\\")
-                    cat_last_name = cat_last_name[-1]
-                    print(cat_last_name)
+                print(filelist)
+                
+                if len(filelist) <= 0:
 
-                    cat_list.append(cat_last_name)
+              
+                    pass
                     
-                
-                #complete_list[last_name] = cat_list
-                complete_list["last_name"] = last_name
-                complete_list["categories"] = cat_list
-                projects.append([complete_list])
+                elif len(filelist) > 0:
 
-                
+
+                    projects_categories = [ f.path for f in os.scandir(proj) if f.is_dir() ]
+                    for cate in projects_categories:
+                        print(cate)
+                        cat_last_name = cate.split("\\")
+                        cat_last_name = cat_last_name[-1]
+                        print(cat_last_name)
+
+                        cat_list.append(cat_last_name)
+                        
+                    
+                #complete_list[last_name] = cat_list
+                    print(last_name)
+                    print(proj)
+                    complete_list["project_name"] = last_name
+                    complete_list["categories"] = cat_list
+                    complete_list["status"] = "trained"
+                    projects.append(complete_list)
+                    print(projects)
+
+                    print("NEXT")
+
+                #projectss.append(projects)
 
             #retJson = {"status":200,"projects":projects,"categories":complete_list}
             
+            # retJson = {"status":200,"Trained_projects":proj_categories}
+            # return jsonify(retJson)
             retJson = {"status":200,"projects":projects}
             return jsonify(retJson)
 
@@ -234,7 +258,7 @@ class Get_Projects_Without_Data(Resource):
 
             complete_list = dict()
             projectss = list()
-            proj_categories = list()
+            
             my_dict = dict()
       
             subfolders_projects = [ f.path for f in os.scandir(proj_path) if f.is_dir() ]
@@ -242,17 +266,18 @@ class Get_Projects_Without_Data(Resource):
          
             #cat_count = 0
             for proj in subfolders_projects:
-  
+                proj_categories = list()
                 cat_list = list()
                 last_name = proj.split("\\")
                 last_name = last_name[-1]
        
                 projects_categories = [ f.path for f in os.scandir(proj) if f.is_dir() ]
+                
                 for cate in projects_categories:
-                   
+                    dict1 = dict()
                     cat_last_name = cate.split("\\")
                     cat_last_name = cat_last_name[-1]
-                   
+                    print(cat_last_name)
                     cat_list.append(cat_last_name)
                    
                     extensions = [".jpg", ".jpeg", ".png"]
@@ -262,9 +287,9 @@ class Get_Projects_Without_Data(Resource):
 
                     if len(filelist) <= 0:
 
-                        dict1 = dict()
-                        dict1["name"] = cat_last_name
-                        dict1["status"] = "not-trained"
+                        
+                        dict1["category_name"] = cat_last_name
+                        dict1["status"] = False
                      
                         #cat_count += 1
 
@@ -280,9 +305,9 @@ class Get_Projects_Without_Data(Resource):
                         #     print("2nd",complete_list)
                     elif len(filelist) > 0:
 
-                        dict1 = dict()
-                        dict1["name"] = cat_last_name
-                        dict1["status"] = "trained"
+                        #dict1 = dict()
+                        dict1["category_name"] = cat_last_name
+                        dict1["status"] = True
 
                     proj_categories.append(dict1)
                     print(proj_categories)
@@ -409,14 +434,15 @@ class Delete_Project(Resource):
             project_name = postedDate['project_name']
 
             project_path = proj_path + "\\" + project_name
-            os.remove(project_path)
+            #os.rmdir(project_path)
+            shutil.rmtree(project_path, ignore_errors=True)
 
             retJson = {"status":200,"message":f"You've successfully deleted {project_name}"}
             return jsonify(retJson)
 
 
         except Exception as e:
-            retJson = {"status" : 301, "message": "Cannot delete this project"}
+            retJson = {"status" : 301, "message": "Cannot delete this project","problem":str(e)}
             return jsonify(retJson)
 
 api.add_resource(Create_Project, "/create_project")
